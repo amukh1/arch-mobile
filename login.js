@@ -10,6 +10,7 @@ export default function App({navigation}) {
   const [roomid, sroomid] = React.useState(null);
   return (
     <KeyboardShift>
+       <StatusBar style="dark" />
     <View style={styles.container}>
       <Text style={styles.loginTitle}>Login</Text>
       <Text style={styles.loginSubtitle}>Please enter your credentials to continue</Text>

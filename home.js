@@ -39,6 +39,7 @@ let ws = route.params.ws
         let data = JSON.parse(e.data)
         console.log("Received: ");
         console.log(data);
+        
 
         if(data.type == 'msg'){
             if(data.user == user){
@@ -61,6 +62,8 @@ let ws = route.params.ws
       };
   return (
     <KeyboardShift>
+       <StatusBar style="light" />
+
     <ScrollView style={styles.mainM}>
     {/* <Msg message="Hello (2)" time="12:01" user="user"/>
     <Msg message="Hello" time="12:00" user="user"/> */}

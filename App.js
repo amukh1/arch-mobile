@@ -18,16 +18,6 @@ export default function App() {
     <Stack.Screen
           name="Login"
           component={Login}
-          options={{
-            // headerStyle: {
-            //   backgroundColor: 'rgb(18,18,18)',
-            // },
-            // headerTintColor: '#fff',
-            // headerTitleStyle: {
-            //   fontWeight: 'bold',
-            //   color: 'white',
-            // },
-          }}
         />
         
         <Stack.Screen
@@ -48,6 +38,8 @@ export default function App() {
           component={Home}
         />
     </Stack.Navigator>
+
+
     </NavigationContainer>
 
 //     <View style={styles.container}>
