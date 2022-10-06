@@ -5,7 +5,7 @@ import { KeyboardAwareScrollView } from 'react-native-keyboard-aware-scroll-view
 import React, { useState } from 'react';
 import KeyboardShift from './kbs'
 
-export default function Input({styles, number, onChangeNumber, setMsgs, msgs, ws, room, route}) {
+export default function Input({styles, number, onChangeNumber, setMsgs, msgs, ws, room, route, token}) {
     return (
     <View style={styles.container}>
 
@@ -30,21 +30,21 @@ export default function Input({styles, number, onChangeNumber, setMsgs, msgs, ws
 <Pressable style={styles.button2} onPress={async ()=> {
 //   Alert.alert(`Message: ${number}`)
 setMsgs([...msgs , {msg: number, time: new Date().toLocaleTimeString(), user: route.params.user}])
-let xt = await fetch(`https://api.arch.amukh1.dev/login?username=${route.params.user}&password=${route.params.password}`)
-let x = await xt.json()
-if(x.authenticated == true){
+// let xt = await fetch(`https://api.arch.amukh1.dev/login?username=${route.params.user}&password=${route.params.password}`)
+// let x = await xt.json()
+// if(x.authenticated == true){
 ws.send(JSON.stringify({
     type: 'msg',
     room: route.params.room,
     user: route.params.user,
-    token: x.token,
+    token: token,
     msg: {user:route.params.user, time: new Date().toLocaleTimeString(), msg:number }
 })
 );
 
-}else {
-    Alert.alert('Error', 'Not authenticated')
-}
+// }else {
+//     Alert.alert('Error', 'Not authenticated')
+// }
 
 onChangeNumber(null)
 //   navigation.navigate('Home', {user: number, password: number})

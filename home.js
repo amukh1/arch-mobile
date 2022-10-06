@@ -1,11 +1,23 @@
 import { StatusBar } from 'expo-status-bar';
-import { StyleSheet, Text, View, TextInput, Pressable, Alert, KeyboardAvoidingView, TouchableWithoutFeedback, Keyboard, ScrollView} from 'react-native';
+import { StyleSheet, Text, View, TextInput, Pressable, Alert, KeyboardAvoidingView, TouchableWithoutFeedback, Keyboard, ScrollView, AppState} from 'react-native';
 import { NavigationContainer } from '@react-navigation/native';
 import { KeyboardAwareScrollView } from 'react-native-keyboard-aware-scroll-view'
-import React, { useState, useEffect } from 'react';
+import React, { useState, useEffect, useRef } from 'react';
 import KeyboardShift from './kbs'
 import InputBox from './inputBox'
 import Msg from './msg'
+import * as Device from 'expo-device';
+import * as Notifications from 'expo-notifications';
+import AsyncStorage from '@react-native-async-storage/async-storage';
+
+
+Notifications.setNotificationHandler({
+  handleNotification: async () => ({
+    shouldShowAlert: true,
+    shouldPlaySound: false,
+    shouldSetBadge: false,
+  }),
+});
 
 export default function App({navigation, route}) {
   const [number, onChangeNumber] = React.useState(null);
@@ -14,6 +26,52 @@ let user = route.params.user
 let password = route.params.password
 let room = route.params.room
 let ws = route.params.ws
+
+const [expoPushToken, setExpoPushToken] = useState('');
+  const [notification, setNotification] = useState(false);
+  const notificationListener = useRef();
+  const responseListener = useRef();
+
+  const appState = useRef(AppState.currentState);
+  const [appStateVisible, setAppStateVisible] = useState(appState.current);
+  useEffect(() => {
+
+    const subscription = AppState.addEventListener("change",async nextAppState => {
+      console.log('change')
+      console.log(AppState.currentState)
+      if(AppState.currentState != 'active'){
+        // console.log('no')
+        await fetch(`https://api.arch.amukh1.dev/switch?token=${encodeURIComponent(expoPushToken)}&room=${room}&state=false`)
+      }else {
+        console.log('yes')
+        // console.log(ws)
+        await fetch(`https://api.arch.amukh1.dev/switch?token=${encodeURIComponent(expoPushToken)}&room=${room}&state=true`)
+      }
+
+      appState.current = nextAppState;
+      setAppStateVisible(appState.current);
+      console.log("AppState", appState.current);
+    });
+
+    registerForPushNotificationsAsync().then(token => setExpoPushToken(token));
+
+    // This listener is fired whenever a notification is received while the app is foregrounded
+    notificationListener.current = Notifications.addNotificationReceivedListener(notification => {
+      setNotification(notification);
+    });
+
+    // This listener is fired whenever a user taps on or interacts with a notification (works when app is foregrounded, backgrounded, or killed)
+    responseListener.current = Notifications.addNotificationResponseReceivedListener(response => {
+      console.log(response);
+    });
+
+    return () => {
+      Notifications.removeNotificationSubscription(notificationListener.current);
+      Notifications.removeNotificationSubscription(responseListener.current);
+      subscription.remove();
+    };
+    
+  }, []);
 // let room = route.params.room
 
 // if(!ws){
@@ -35,17 +93,24 @@ let ws = route.params.ws
         }));
     };
 
-    ws.onmessage = function(e) {
+    ws.onmessage = async function(e) {
         let data = JSON.parse(e.data)
         console.log("Received: ");
         console.log(data);
-        
+
 
         if(data.type == 'msg'){
             if(data.user == user){
                 console.log('same user msg rte?')
             }else if(data.room == room){
                 console.log('same room msg rte?')
+                console.log(AppState.currentState)
+                // await sendPushNotification(expoPushToken, `ARCH - ${room}`, data.msg.msg);
+                // if(AppState.currentState !== 'active'){
+                //   await sendPushNotification(expoPushToken, `ARCH - ${room}`, data.msg.msg);
+                //     console.log('app is active')
+                // }
+                
             setMsgs(data.msgs)
         }else {
             console.log('not same room')
@@ -53,12 +118,10 @@ let ws = route.params.ws
             console.log(room+'e')
             }
         }
-        // else if(data.type == 'ready'){
-        //     if(data.user == user){
-        //         console.log('same user join rte?')
-        //         setMsgs(data.msgs)
-        //     }
-        // }
+        else if(data.type == 'ready'){
+                setMsgs(data.msgs)
+            
+        }
       };
   return (
     <KeyboardShift>
@@ -76,7 +139,7 @@ let ws = route.params.ws
 
     </ScrollView>
 
-    <InputBox styles={styles} number={number} onChangeNumber={onChangeNumber} setMsgs={setMsgs} msgs={msgs} ws={ws} room={room} route={route}/>
+    <InputBox styles={styles} number={number} onChangeNumber={onChangeNumber} setMsgs={setMsgs} msgs={msgs} ws={ws} room={room} route={route} token={route.params.token}/>
     </KeyboardShift>
   );
 }
@@ -175,3 +238,82 @@ flexDirection: 'column-reverse',
     color: 'rgb(37,37,37)',
   }
 });
+
+// Can use this function below, OR use Expo's Push Notification Tool-> https://expo.dev/notifications
+async function sendPushNotification(expoPushToken, titlee, bodyy) {
+  console.log(bodyy)
+  const message = {
+    // ExponentPushToken[Xpss79GhqNCCKb7CTWpqQp]
+    to: expoPushToken,
+    sound: 'default',
+    title: titlee,
+    body: bodyy,
+    data: { someData: 'goes here' },
+  };
+
+  await fetch('https://exp.host/--/api/v2/push/send', {
+    method: 'POST',
+    headers: {
+      Accept: 'application/json',
+      'Accept-encoding': 'gzip, deflate',
+      'Content-Type': 'application/json',
+    },
+    body: JSON.stringify(message),
+  });
+}
+
+async function registerForPushNotificationsAsync() {
+  let token;
+  if (Device.isDevice) {
+    const { status: existingStatus } = await Notifications.getPermissionsAsync();
+    let finalStatus = existingStatus;
+    if (existingStatus !== 'granted') {
+      console.log('granted')
+      const { status } = await Notifications.requestPermissionsAsync();
+      finalStatus = status;
+    }
+    if (finalStatus !== 'granted') {
+      alert('Failed to get push token for push notification!');
+      return;
+    }
+    token = (await Notifications.getExpoPushTokenAsync()).data;
+    console.log(token);
+  } else {
+    alert('Must use physical device for Push Notifications');
+  }
+
+  if (Platform.OS === 'android') {
+    Notifications.setNotificationChannelAsync('default', {
+      name: 'default',
+      importance: Notifications.AndroidImportance.MAX,
+      vibrationPattern: [0, 250, 250, 250],
+      lightColor: '#FF231F7C',
+    });
+  }
+
+  return token;
+}
+
+
+const storeData = async (key,value) => {
+  try {
+    await AsyncStorage.setItem(key, value)
+    return 'success'
+  } catch (e) {
+    // saving error
+    return null
+  }
+}
+
+const getData = async (key) => {
+  try {
+    const value = await AsyncStorage.getItem(key)
+    if(value !== null) {
+      // value previously stored
+      return value
+    }
+  } catch(e) {
+    // error reading value
+    return null
+  }
+}
