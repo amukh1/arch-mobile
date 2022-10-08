@@ -1,3 +1,36 @@
-workflows: 
-  ios-release: 
-    name: iOS release 
+workflows:
+  my-workflow:
+    name: IOS
+    labels:
+      - QA
+      - Aditya
+    instance_type: mac_mini_m1
+    max_build_duration: 60
+    environment:
+      groups:
+        - SleepyDevs
+      vars:
+        PUBLIC_ENV_VAR: "value here"
+      flutter: stable
+      xcode: latest
+    cache:
+      cache_paths:
+        - ~/.pub-cache
+    triggering:
+      events:
+        - push
+      branch_patterns:
+        - pattern: '*'
+          include: true
+          source: true
+      cancel_previous_builds: false
+    scripts:
+      - ...
+    artifacts:
+      - build/**/outputs/bundle/**/*.aab
+    publishing:
+      email:
+        recipients:
+          - fr0g_gam3r@outlook.com
+      scripts:
+        - echo 'Post-publish script'
