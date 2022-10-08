@@ -2,7 +2,6 @@ workflows:
   my-workflow:
     name: IOS
     labels:
-      - QA
       - Aditya
     instance_type: mac_mini_m1
     max_build_duration: 60
