@@ -1,2 +1,5 @@
-scripts:
-  - name: Build for iOS         # Name of the section
+workflows: 
+  ios-release: 
+    name: iOS release 
+    environment: 
+      << : *env_versions
