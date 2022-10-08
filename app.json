@@ -19,6 +19,7 @@
     ],
     "ios": {
       "supportsTablet": true,
+      "buildNumber": "1.0.0",
       "bundleIdentifier": "com.amukh1.archmobile",
       "infoPlist": {
         "UIbackgroundModes": ["location", "fetch"]
