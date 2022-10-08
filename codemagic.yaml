@@ -1,5 +1,3 @@
 workflows: 
   ios-release: 
     name: iOS release 
-    environment: 
-      << : *env_versions
