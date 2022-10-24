@@ -3,7 +3,7 @@ import { StyleSheet, Text, View, TextInput, Pressable, Alert } from 'react-nativ
 import { NavigationContainer } from '@react-navigation/native';
 import React, { useState } from 'react';
 import { createNativeStackNavigator } from '@react-navigation/native-stack';
-
+//testche
 const Stack = createNativeStackNavigator();
 
 
