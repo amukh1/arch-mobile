@@ -29,4 +29,5 @@ jobs:
     - run: npm i expo
     - run: npm i
     - run: npm i -g expo-cli
-    - run: npx expo prebuild
+    - run: npx expo prebuild -p ios
+    
