@@ -29,5 +29,5 @@ jobs:
     - run: npm i expo
     - run: npm i
     - run: npm i -g expo-cli
-    - run: eas build -p ios
+    - run: npx eas build -p ios
     
